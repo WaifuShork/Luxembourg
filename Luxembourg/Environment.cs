@@ -27,6 +27,7 @@ namespace Luxembourg
         {
             if (_values.ContainsKey(name.Lexeme))
             {
+                // Modify the value on the spot instead of adding a new key
                 return _values[name.Lexeme];
             }
 
@@ -42,8 +43,8 @@ namespace Luxembourg
         {
             if (_values.ContainsKey(name.Lexeme))
             {
+                // Modify the value on the spot instead of adding a new key
                 _values[name.Lexeme] = value;
-                // _values.Add(name.Lexeme, value);
                 return;
             }
 
@@ -54,6 +55,27 @@ namespace Luxembourg
             }
 
             throw new RuntimeError(name, $"Undefined variable '{name.Lexeme}'.");
+        }
+
+        public object GetAt(int distance, string name)
+        {
+            return Ancestor(distance)._values[name];
+        }
+
+        public Environment Ancestor(int distance)
+        {
+            var environment = this;
+            for (var i = 0; i < distance; i++)
+            {
+                environment = environment.Enclosing;
+            }
+
+            return environment;
+        }
+
+        public void AssignAt(int distance, Token name, object value)
+        {
+            Ancestor(distance)._values[name.Lexeme] = value;
         }
     }
 }

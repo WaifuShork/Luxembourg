@@ -43,7 +43,7 @@ namespace Luxembourg
 
                 return Statement();
             }
-            catch (ParseError e)
+            catch (ParseError)
             {
                 Synchronize();
                 return null;
@@ -92,11 +92,7 @@ namespace Luxembourg
         }
         
         
-        // Checks the current token without actually advancing the position
-        private Token Peek()
-        {
-            return _tokens[_current];
-        }
+        
 
         private Expression Expression()
         {
@@ -140,9 +136,9 @@ namespace Luxembourg
                 var equals = Previous();
                 var value = Assignment();
 
-                if (expression is Expression.Variable)
+                if (expression is Expression.Variable variable)
                 {
-                    var name = ((Expression.Variable) expression).Name;
+                    var name = variable.Name;
                     return new Expression.Assign(name, value);
                 }
 
@@ -166,49 +162,7 @@ namespace Luxembourg
             return expression;
         }
 
-        private bool Match(params TokenType[] types)
-        {
-            foreach (var type in types)
-            {
-                if (Check(type))
-                {
-                    Advance();
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private bool Check(TokenType type)
-        {
-            if (IsAtEnd())
-            {
-                return false;
-            }
-
-            return Peek().Type == type;
-        }
-
-        private Token Advance()
-        {
-            if (!IsAtEnd())
-            {
-                _current++;
-            }
-
-            return Previous();
-        }
-
-        private bool IsAtEnd()
-        {
-            return Peek().Type == TokenType.EndOfFile;
-        }
-
-        private Token Previous()
-        {
-            return _tokens[_current - 1];
-        }
+        
 
         private Expression Comparison()
         {
@@ -440,7 +394,7 @@ namespace Luxembourg
 
             if (initializer != null)
             {
-                body = new Statement.Block(new() {initializer, body});
+                body = new Statement.Block(new() { initializer, body });
             }
             
             return body;
@@ -460,6 +414,7 @@ namespace Luxembourg
         {
             Consume(TokenType.OpenParen, "Expect '(' after 'if'.");
             var condition = Expression();
+            Consume(TokenType.CloseParen, "Expect ')' after expression.");
 
             var thenBranch = Statement();
             Statement elseBranch = null;
@@ -496,6 +451,59 @@ namespace Luxembourg
             var expression = Expression();
             Consume(TokenType.Semicolon, "Expect ';' after expression,");
             return new Statement.Expression(expression);
+        }
+        
+        
+        
+        // Helpers \\ 
+        private bool Match(params TokenType[] types)
+        {
+            foreach (var type in types)
+            {
+                if (Check(type))
+                {
+                    Advance();
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool Check(TokenType type)
+        {
+            if (IsAtEnd())
+            {
+                return false;
+            }
+
+            return Peek().Type == type;
+        }
+
+        private Token Advance()
+        {
+            if (!IsAtEnd())
+            {
+                _current++;
+            }
+
+            return Previous();
+        }
+
+        private bool IsAtEnd()
+        {
+            return Peek().Type == TokenType.EndOfFile;
+        }
+
+        private Token Previous()
+        {
+            return _tokens[_current - 1];
+        }
+        
+        // Checks the current token without actually advancing the position
+        private Token Peek()
+        {
+            return _tokens[_current];
         }
 
         private Token Consume(TokenType type, string message)

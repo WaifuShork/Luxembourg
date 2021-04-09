@@ -6,7 +6,8 @@ namespace Luxembourg
     public class Interpreter : Expression.Visitor<object>, Statement.Visitor<object>
     {
         public Environment Environment = new();
-
+        private readonly Dictionary<Expression, int> _locals = new();
+        
         public void Interpret(Expression expression)
         {
             try
@@ -33,6 +34,11 @@ namespace Luxembourg
             {
                 Lux.RuntimeError(e);
             }
+        }
+
+        public void Resolve(Expression expression, int depth)
+        {
+            _locals[expression] = depth;
         }
 
         private string Stringify(object obj)
@@ -107,7 +113,6 @@ namespace Luxembourg
             // Unreachable
             return null;
         }
-        
 
         public object VisitGroupingExpression(Expression.Grouping expression)
         {
@@ -204,14 +209,38 @@ namespace Luxembourg
 
         public object VisitVariableExpression(Expression.Variable expression)
         {
-            return Environment.Get(expression.Name);
+            return LookupVariable(expression.Name, expression);
         }
 
         public object VisitAssignExpression(Expression.Assign expression)
         {
             var value = Evaluate(expression.Value);
-            Environment.Assign(expression.Name, value);
+            var distance = _locals[expression];
+            
+            if (distance != null)
+            {
+                Environment.AssignAt(distance, expression.Name, value);
+            }
+            else
+            {
+                Environment.Assign(expression.Name, value);
+            }
+
             return value;
+        }
+
+        private object LookupVariable(Token name, Expression expression)
+        {
+            var distance = _locals[expression];
+
+            if (distance != null)
+            {
+                return Environment.GetAt(distance, name.Lexeme);
+            }
+            else
+            {
+                return Environment.Get(name);
+            }
         }
 
         private bool IsTruthy(object obj)
@@ -306,7 +335,7 @@ namespace Luxembourg
 
         public object VisitFunctionStatement(Statement.Function statement)
         {
-            var function = new LuxFunction(statement);
+            var function = new LuxFunction(statement, Environment);
             Environment.Define(statement.Name.Lexeme, function);
             return null;
         }

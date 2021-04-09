@@ -73,14 +73,22 @@ namespace Luxembourg
             var tokens = scanner.ScanTokens();
 
             var parser = new Parser(tokens);
-            var statement = parser.Parse();
+            var statements = parser.Parse();
 
             if (_hadError)
             {
                 return;
-            } 
+            }
             
-            _interpreter.Interpret(statement);
+            var resolver = new Resolver(_interpreter);
+            resolver.Resolve(statements);
+            
+            if (_hadError)
+            {
+                return;
+            }
+
+            _interpreter.Interpret(statements);
             // Console.Out.WriteLine(new AstPrinter().Print(statement));
             // PrettyPrint(tokens);
         }
