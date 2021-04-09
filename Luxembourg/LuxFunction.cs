@@ -6,11 +6,13 @@ namespace Luxembourg
     {
         private readonly Statement.Function _declaration;
         private readonly Environment _closure;
+        private readonly bool _isInitializer;
         
-        public LuxFunction(Statement.Function declaration, Environment closure)
+        public LuxFunction(Statement.Function declaration, Environment closure, bool isInitializer)
         {
             _declaration = declaration;
             _closure = closure;
+            _isInitializer = isInitializer;
         }
 
         public int Arity()
@@ -33,10 +35,27 @@ namespace Luxembourg
             }
             catch (Return r)
             {
+                if (_isInitializer)
+                {
+                    return _closure.GetAt(0, "this");
+                }
+                
                 return r.Value;
+            }
+
+            if (_isInitializer)
+            {
+                return _closure.GetAt(0, "this");
             }
             
             return null;
+        }
+
+        public LuxFunction Bind(LuxInstance instance)
+        {
+            var environment = new Environment(_closure);
+            environment.Define("this", instance);
+            return new(_declaration, environment, _isInitializer);
         }
     }
 }

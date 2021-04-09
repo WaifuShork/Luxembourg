@@ -37,10 +37,9 @@ namespace Luxembourg
         public class Class : Statement
         {
             
-            public Class(Token name, Luxembourg.Expression.Variable baseClass, List<Function> methods)
+            public Class(Token name, List<Function> methods)
             {
                 Name = name;
-                BaseClass = baseClass;
                 Methods = methods;
             }
             

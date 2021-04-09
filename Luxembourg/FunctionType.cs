@@ -3,6 +3,8 @@
     public enum FunctionType
     {
         None,
-        Function
+        Function,
+        Initializer,
+        Method
     }
 }

@@ -13,6 +13,7 @@
         Plus,
         Semicolon,
         Slash,
+        StarStar,
         Star,
         
         // One or two character tokens

@@ -90,7 +90,7 @@ namespace Luxembourg
                     AddToken(TokenType.Semicolon);
                     break;
                 case '*':
-                    AddToken(TokenType.Star);
+                    AddToken(Match('*') ? TokenType.StarStar : TokenType.Star);
                     break;
                 case '!':
                     AddToken(Match('=') ? TokenType.BangEquals : TokenType.Bang);
@@ -165,12 +165,9 @@ namespace Luxembourg
             }
 
             var text = _source.SubstringEx(_start, _current);
-            //var type = _keywords[text];
             if (!_keywords.TryGetValue(text, out var type))
             {
                 type = TokenType.Identifier;
-                // _keywords[text] = TokenType.Identifier;
-                //_keywords.AddOrUpdate(text, TokenType.Identifier);
             }
 
             AddToken(type);
@@ -180,7 +177,7 @@ namespace Luxembourg
         {
             return (c >= 'a' && c <= 'z') ||
                    (c >= 'A' && c <= 'Z') ||
-                   c == '_';
+                    c == '_';
         }
 
         private bool IsAlphaNumeric(char c)

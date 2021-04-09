@@ -9,6 +9,7 @@ namespace Luxembourg
         private readonly Interpreter _interpreter;
         private readonly Stack<Dictionary<string, bool>> _scopes = new();
         private FunctionType _currentFunction = FunctionType.None;
+        private ClassType _currentClass = ClassType.None;
 
         public Resolver(Interpreter interpreter)
         {
@@ -52,7 +53,8 @@ namespace Luxembourg
 
         public object VisitGetExpression(Expression.Get expression)
         {
-            throw new System.NotImplementedException();
+            Resolve(expression.Object);
+            return null;
         }
 
         public object VisitLogicalExpression(Expression.Logical expression)
@@ -64,7 +66,9 @@ namespace Luxembourg
 
         public object VisitSetExpression(Expression.Set expression)
         {
-            throw new System.NotImplementedException();
+            Resolve(expression.Value);
+            Resolve(expression.Object);
+            return null;
         }
 
         public object VisitBaseExpression(Expression.Base expression)
@@ -74,7 +78,14 @@ namespace Luxembourg
 
         public object VisitThisExpression(Expression.This expression)
         {
-            throw new System.NotImplementedException();
+            if (_currentClass == ClassType.None)
+            {
+                Lux.Error(expression.Keyword, "Can't use 'this' outside of a class.");
+                return null;
+            }
+            
+            ResolveLocal(expression, expression.Keyword);
+            return null;
         }
 
         public object VisitVariableExpression(Expression.Variable expression)
@@ -164,7 +175,28 @@ namespace Luxembourg
 
         public object VisitClassStatement(Statement.Class statement)
         {
-            throw new System.NotImplementedException();
+            var enclosingClass = _currentClass;
+            _currentClass = ClassType.Class;
+            
+            Declare(statement.Name);
+            Define(statement.Name);
+
+            BeginScope();
+            _scopes.Peek().Put("this", true);
+            
+            foreach (var method in statement.Methods)
+            {
+                var declaration = FunctionType.Method;
+                if (method.Name.Lexeme.Equals("init"))
+                {
+                    declaration = FunctionType.Initializer;
+                }
+                
+                ResolveFunction(method, declaration);
+            }
+            EndScope();
+            _currentClass = enclosingClass;
+            return null;
         }
 
         public object VisitExpressionStatement(Statement.Expression statement)
@@ -203,9 +235,14 @@ namespace Luxembourg
             
             if (statement.Value != null)
             {
+                if (_currentFunction == FunctionType.Initializer)
+                {
+                    Lux.Error(statement.Keyword, "Can't return a value from an initializer");
+                }
+            
                 Resolve(statement.Value);
             }
-
+            
             return null;
         }
 

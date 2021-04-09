@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Luxembourg
 {
@@ -10,15 +11,57 @@ namespace Luxembourg
             return value[startIndex..endIndex];
         }
 
-        public static void AddOrUpdate(this Dictionary<string, TokenType> dictionary, string key, TokenType newValue)
+        public static void Put(this Dictionary<string, object> dictionary, string key, object value)
         {
-            if (dictionary.TryGetValue(key, out _))
+            // does the key exist?
+            // if yes, update the value at that key
+            // if no, add the key and value
+
+            if (!dictionary.ContainsKey(key))
             {
-                dictionary[key] = newValue;
+                if (!dictionary.TryAdd(key, value))
+                {
+                    Console.Error.WriteLine("Error: Failed to added K/V to dictionary.");
+                    //throw new("Error: Failed to added K/V to dictionary.");
+                }
             }
             else
             {
-                dictionary.Add(key, newValue);
+                try
+                {
+                    dictionary[key] = value;
+                }
+                catch (KeyNotFoundException)
+                {
+                    Console.Error.WriteLine("Error: Unable to update value for a nonexistent key.");
+                }
+            }
+        }
+        
+        public static void Put<T, TU>(this Dictionary<T, TU> dictionary, T key, TU value)
+        {
+            // does the key exist?
+            // if yes, update the value at that key
+            // if no, add the key and value
+
+            if (!dictionary.ContainsKey(key))
+            {
+                if (!dictionary.TryAdd(key, value))
+                {
+                    Console.Error.WriteLine("Error: Failed to added K/V to dictionary.");
+                    //throw new("Error: Failed to added K/V to dictionary.");
+                }
+            }
+            else
+            {
+                try
+                {
+                    dictionary[key] = value;
+                }
+                catch (KeyNotFoundException)
+                {
+                    Console.Error.WriteLine("Error: Unable to update value for a nonexistent key.");
+                }
             }
         }
     }

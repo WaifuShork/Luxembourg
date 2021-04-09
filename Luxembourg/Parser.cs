@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace Luxembourg
 {
@@ -41,6 +40,11 @@ namespace Luxembourg
                     return Procedure("procedure");
                 }
 
+                if (Match(TokenType.Class))
+                {
+                    return ClassDeclaration();
+                }
+
                 return Statement();
             }
             catch (ParseError)
@@ -50,6 +54,22 @@ namespace Luxembourg
             }
         }
 
+        private Statement ClassDeclaration()
+        {
+            var name = Consume(TokenType.Identifier, "Expect class name.");
+            Consume(TokenType.OpenBrace, "Expect '{' before class body");
+
+            var methods = new List<Statement.Function>();
+
+            while (!Check(TokenType.CloseBrace) && !IsAtEnd())
+            {
+                methods.Add(Procedure("procedure"));
+            }
+
+            Consume(TokenType.CloseBrace, "Expect '}' after class body.");
+            return new Statement.Class(name, methods);
+        }
+        
         private Statement.Function Procedure(string kind)
         {
             var name = Consume(TokenType.Identifier, $"Expect {kind} name.");
@@ -91,9 +111,6 @@ namespace Luxembourg
             return new Statement.Var(name, initializer);
         }
         
-        
-        
-
         private Expression Expression()
         {
             return Assignment();
@@ -140,6 +157,10 @@ namespace Luxembourg
                 {
                     var name = variable.Name;
                     return new Expression.Assign(name, value);
+                }
+                else if (expression is Expression.Get get)
+                {
+                    return new Expression.Set(get.Object, get.Name, value);
                 }
 
                 Error(equals, "Invalid assignment target.");
@@ -195,7 +216,7 @@ namespace Luxembourg
         {
             var expression = Unary();
 
-            while (Match(TokenType.Slash, TokenType.Star))
+            while (Match(TokenType.Slash, TokenType.Star, TokenType.StarStar))
             {
                 var op = Previous();
                 var right = Unary();
@@ -226,6 +247,11 @@ namespace Luxembourg
                 if (Match(TokenType.OpenParen))
                 {
                     expression = FinishCall(expression);
+                }
+                else if (Match(TokenType.Dot))
+                {
+                    var name = Consume(TokenType.Identifier, "Expect property name after '.'.");
+                    expression = new Expression.Get(expression, name);
                 }
                 else
                 {
@@ -279,8 +305,14 @@ namespace Luxembourg
                 return new Expression.Literal(Previous().Literal);
             }
 
+            if (Match(TokenType.This))
+            {
+                return new Expression.This(Previous());
+            }
+
             if (Match(TokenType.OpenParen))
             {
+                // flagged
                 var expression = Expression();
                 Consume(TokenType.CloseParen, "Expect ')' after expression.");
                 return new Expression.Grouping(expression);
