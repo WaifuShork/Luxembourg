@@ -4,11 +4,11 @@ namespace Luxembourg
 {
     public class LuxFunction : ILuxCallable
     {
-        private readonly Statement.Function _declaration;
+        private readonly FunctionStatement _declaration;
         private readonly Environment _closure;
         private readonly bool _isInitializer;
         
-        public LuxFunction(Statement.Function declaration, Environment closure, bool isInitializer)
+        public LuxFunction(FunctionStatement declaration, Environment closure, bool isInitializer)
         {
             _declaration = declaration;
             _closure = closure;

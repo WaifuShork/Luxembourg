@@ -59,7 +59,7 @@ namespace Luxembourg
             var name = Consume(TokenType.Identifier, "Expect class name.");
             Consume(TokenType.OpenBrace, "Expect '{' before class body");
 
-            var methods = new List<Statement.Function>();
+            var methods = new List<FunctionStatement>();
 
             while (!Check(TokenType.CloseBrace) && !IsAtEnd())
             {
@@ -67,10 +67,10 @@ namespace Luxembourg
             }
 
             Consume(TokenType.CloseBrace, "Expect '}' after class body.");
-            return new Statement.Class(name, methods);
+            return new ClassStatement(name, methods);
         }
         
-        private Statement.Function Procedure(string kind)
+        private FunctionStatement Procedure(string kind)
         {
             var name = Consume(TokenType.Identifier, $"Expect {kind} name.");
             Consume(TokenType.OpenParen, $"Expect '(' after {kind} name.");
@@ -108,7 +108,7 @@ namespace Luxembourg
             }
 
             Consume(TokenType.Semicolon, "Expect ';' after variable declaration.");
-            return new Statement.Var(name, initializer);
+            return new VarStatement(name, initializer);
         }
         
         private Expression Expression()
@@ -124,7 +124,7 @@ namespace Luxembourg
             {
                 var op = Previous();
                 var right = And();
-                expression = new Expression.Logical(expression, op, right);
+                expression = new LogicalExpression(expression, op, right);
             }
 
             return expression;
@@ -138,7 +138,7 @@ namespace Luxembourg
             {
                 var op = Previous();
                 var right = Equality();
-                expression = new Expression.Logical(expression, op, right);
+                expression = new LogicalExpression(expression, op, right);
             }
 
             return expression;
@@ -153,14 +153,14 @@ namespace Luxembourg
                 var equals = Previous();
                 var value = Assignment();
 
-                if (expression is Expression.Variable variable)
+                if (expression is VariableExpression variable)
                 {
                     var name = variable.Name;
-                    return new Expression.Assign(name, value);
+                    return new AssignExpression(name, value);
                 }
-                else if (expression is Expression.Get get)
+                else if (expression is GetExpression get)
                 {
-                    return new Expression.Set(get.Object, get.Name, value);
+                    return new SetExpression(get.Object, get.Name, value);
                 }
 
                 Error(equals, "Invalid assignment target.");
@@ -177,7 +177,7 @@ namespace Luxembourg
             {
                 var op = Previous();
                 var right = Comparison();
-                expression = new Expression.Binary(expression, op, right);
+                expression = new BinaryExpression(expression, op, right);
             }
 
             return expression;
@@ -192,7 +192,7 @@ namespace Luxembourg
             {
                 var op = Previous();
                 var right = Term();
-                expression = new Expression.Binary(expression, op, right);
+                expression = new BinaryExpression(expression, op, right);
             }
 
             return expression;
@@ -206,7 +206,7 @@ namespace Luxembourg
             {
                 var op = Previous();
                 var right = Factor();
-                expression = new Expression.Binary(expression, op, right);
+                expression = new BinaryExpression(expression, op, right);
             }
 
             return expression;
@@ -220,7 +220,7 @@ namespace Luxembourg
             {
                 var op = Previous();
                 var right = Unary();
-                expression = new Expression.Binary(expression, op, right);
+                expression = new BinaryExpression(expression, op, right);
             }
 
             return expression;
@@ -232,7 +232,7 @@ namespace Luxembourg
             {
                 var op = Previous();
                 var right = Unary();
-                return new Expression.Unary(op, right);
+                return new UnaryExpression(op, right);
             }
 
             return Call();
@@ -251,7 +251,7 @@ namespace Luxembourg
                 else if (Match(TokenType.Dot))
                 {
                     var name = Consume(TokenType.Identifier, "Expect property name after '.'.");
-                    expression = new Expression.Get(expression, name);
+                    expression = new GetExpression(expression, name);
                 }
                 else
                 {
@@ -280,34 +280,34 @@ namespace Luxembourg
             }
 
             var paren = Consume(TokenType.CloseParen, "Expect ')' after arguments");
-            return new Expression.Call(callee, paren, arguments);
+            return new CallExpression(callee, paren, arguments);
         }
 
         private Expression Primary()
         {
             if (Match(TokenType.False))
             {
-                return new Expression.Literal(false);
+                return new LiteralExpression(false);
             }
 
             if (Match(TokenType.True))
             {
-                return new Expression.Literal(true);
+                return new LiteralExpression(true);
             }
 
             if (Match(TokenType.Nil))
             {
-                return new Expression.Literal(null);
+                return new LiteralExpression(null);
             }
 
             if (Match(TokenType.Number, TokenType.String))
             {
-                return new Expression.Literal(Previous().Literal);
+                return new LiteralExpression(Previous().Literal);
             }
 
             if (Match(TokenType.This))
             {
-                return new Expression.This(Previous());
+                return new ThisExpression(Previous());
             }
 
             if (Match(TokenType.OpenParen))
@@ -315,12 +315,12 @@ namespace Luxembourg
                 // flagged
                 var expression = Expression();
                 Consume(TokenType.CloseParen, "Expect ')' after expression.");
-                return new Expression.Grouping(expression);
+                return new GroupingExpression(expression);
             }
 
             if (Match(TokenType.Identifier))
             {
-                return new Expression.Variable(Previous());
+                return new VariableExpression(Previous());
             }
 
             throw Error(Peek(), "Expected expression.");
@@ -335,7 +335,7 @@ namespace Luxembourg
 
             if (Match(TokenType.OpenBrace))
             {
-                return new Statement.Block(Block());
+                return new BlockStatement(Block());
             }
 
             if (Match(TokenType.If))
@@ -372,7 +372,7 @@ namespace Luxembourg
             }
 
             Consume(TokenType.Semicolon, "Expect ';' after return value.");
-            return new Statement.Return(keyword, value);
+            return new ReturnStatement(keyword, value);
         }
 
         private Statement ForStatement()
@@ -414,19 +414,19 @@ namespace Luxembourg
 
             if (increment != null)
             {
-                body = new Statement.Block(new() { body, new Statement.Expression(increment) });
+                body = new BlockStatement(new() { body, new ExpressionStatement(increment) });
             }
 
             if (condition == null)
             {
-                condition = new Expression.Literal(true);
+                condition = new LiteralExpression(true);
             }
 
-            body = new Statement.While(condition, body);
+            body = new WhileStatement(condition, body);
 
             if (initializer != null)
             {
-                body = new Statement.Block(new() { initializer, body });
+                body = new BlockStatement(new() { initializer, body });
             }
             
             return body;
@@ -439,7 +439,7 @@ namespace Luxembourg
             Consume(TokenType.CloseParen, "Expect ')' after condition.");
             var body = Statement();
 
-            return new Statement.While(condition, body);
+            return new WhileStatement(condition, body);
         }
 
         private Statement IfStatement()
@@ -455,7 +455,7 @@ namespace Luxembourg
                 elseBranch = Statement();
             }
 
-            return new Statement.If(condition, thenBranch, elseBranch);
+            return new IfStatement(condition, thenBranch, elseBranch);
         }
 
         private List<Statement> Block()
@@ -475,14 +475,14 @@ namespace Luxembourg
         {
             var value = Expression();
             Consume(TokenType.Semicolon, "Expect ';' after a value.");
-            return new Statement.Print(value);
+            return new PrintStatement(value);
         }
 
         private Statement ExpressionStatement()
         {
             var expression = Expression();
             Consume(TokenType.Semicolon, "Expect ';' after expression,");
-            return new Statement.Expression(expression);
+            return new ExpressionStatement(expression);
         }
         
         

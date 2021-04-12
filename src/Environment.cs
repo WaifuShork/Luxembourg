@@ -77,5 +77,16 @@ namespace Luxembourg
         {
             Ancestor(distance)._values[name.Lexeme] = value;
         }
+
+        public override string ToString()
+        {
+            var result = _values.ToString();
+            if (Enclosing != null)
+            {
+                result += $" -> {Enclosing}";
+            }
+
+            return result;
+        }
     }
 }

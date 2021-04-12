@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata;
 
 namespace Luxembourg
 {
-    public class Resolver : Expression.Visitor<object>, Statement.Visitor<object>
+    public class Resolver : IExpressionVisitor<object>, IStatementVisitor<object>
     {
         private readonly Interpreter _interpreter;
         private readonly Stack<Dictionary<string, bool>> _scopes = new();
@@ -16,31 +15,31 @@ namespace Luxembourg
             _interpreter = interpreter;
         }
         
-        public object VisitBinaryExpression(Expression.Binary expression)
+        public object VisitBinaryExpression(BinaryExpression expression)
         {
             Resolve(expression.Left);
             Resolve(expression.Right);
             return null;
         }
 
-        public object VisitGroupingExpression(Expression.Grouping expression)
+        public object VisitGroupingExpression(GroupingExpression expression)
         {
             Resolve(expression.Expression);
             return null;
         }
 
-        public object VisitLiteralExpression(Expression.Literal expression)
+        public object VisitLiteralExpression(LiteralExpression expression)
         {
             return null;
         }
 
-        public object VisitUnaryExpression(Expression.Unary expression)
+        public object VisitUnaryExpression(UnaryExpression expression)
         {
             Resolve(expression.Right);
             return null;
         }
 
-        public object VisitCallExpression(Expression.Call expression)
+        public object VisitCallExpression(CallExpression expression)
         {
             Resolve(expression.Callee);
 
@@ -51,32 +50,32 @@ namespace Luxembourg
             return null;
         }
 
-        public object VisitGetExpression(Expression.Get expression)
+        public object VisitGetExpression(GetExpression expression)
         {
             Resolve(expression.Object);
             return null;
         }
 
-        public object VisitLogicalExpression(Expression.Logical expression)
+        public object VisitLogicalExpression(LogicalExpression expression)
         {
             Resolve(expression.Left);
             Resolve(expression.Right);
             return null;
         }
 
-        public object VisitSetExpression(Expression.Set expression)
+        public object VisitSetExpression(SetExpression expression)
         {
             Resolve(expression.Value);
             Resolve(expression.Object);
             return null;
         }
 
-        public object VisitBaseExpression(Expression.Base expression)
+        public object VisitBaseExpression(BaseExpression expression)
         {
             throw new System.NotImplementedException();
         }
 
-        public object VisitThisExpression(Expression.This expression)
+        public object VisitThisExpression(ThisExpression expression)
         {
             if (_currentClass == ClassType.None)
             {
@@ -88,7 +87,7 @@ namespace Luxembourg
             return null;
         }
 
-        public object VisitVariableExpression(Expression.Variable expression)
+        public object VisitVariableExpression(VariableExpression expression)
         {
             if (_scopes.Any() && _scopes.Peek()[expression.Name.Lexeme] == false)
             {
@@ -99,7 +98,7 @@ namespace Luxembourg
             return null;
         }
 
-        public object VisitAssignExpression(Expression.Assign expression)
+        public object VisitAssignExpression(AssignExpression expression)
         {
             Resolve(expression.Value);
             ResolveLocal(expression, expression.Name);
@@ -149,7 +148,7 @@ namespace Luxembourg
             _scopes.Pop();
         }
 
-        private void ResolveFunction(Statement.Function function, FunctionType type)
+        private void ResolveFunction(FunctionStatement function, FunctionType type)
         {
             var enclosingType = _currentFunction;
             _currentFunction = type;
@@ -165,7 +164,7 @@ namespace Luxembourg
             _currentFunction = enclosingType;
         }
         
-        public object VisitBlockStatement(Statement.Block statement)
+        public object VisitBlockStatement(BlockStatement statement)
         {
             BeginScope();
             Resolve(statement.Statements);
@@ -173,7 +172,7 @@ namespace Luxembourg
             return null;
         }
 
-        public object VisitClassStatement(Statement.Class statement)
+        public object VisitClassStatement(ClassStatement statement)
         {
             var enclosingClass = _currentClass;
             _currentClass = ClassType.Class;
@@ -199,13 +198,13 @@ namespace Luxembourg
             return null;
         }
 
-        public object VisitExpressionStatement(Statement.Expression statement)
+        public object VisitExpressionStatement(ExpressionStatement statement)
         {
-            Resolve(statement.ExpressionSt);
+            Resolve(statement.Expression);
             return null;
         }
 
-        public object VisitFunctionStatement(Statement.Function statement)
+        public object VisitFunctionStatement(FunctionStatement statement)
         {
             Declare(statement.Name);
             Define(statement.Name);
@@ -214,7 +213,7 @@ namespace Luxembourg
             return null;
         }
 
-        public object VisitIfStatement(Statement.If statement)
+        public object VisitIfStatement(IfStatement statement)
         {
             Resolve(statement.Condition);
             Resolve(statement.ThenBranch);
@@ -226,7 +225,7 @@ namespace Luxembourg
             return null;
         }
 
-        public object VisitReturnStatement(Statement.Return statement)
+        public object VisitReturnStatement(ReturnStatement statement)
         {
             if (_currentFunction == FunctionType.None)
             {
@@ -246,13 +245,13 @@ namespace Luxembourg
             return null;
         }
 
-        public object VisitPrintStatement(Statement.Print statement)
+        public object VisitPrintStatement(PrintStatement statement)
         {
             Resolve(statement.Expression);
             return null;
         }
 
-        public object VisitVarStatement(Statement.Var statement)
+        public object VisitVarStatement(VarStatement statement)
         {
             Declare(statement.Name);
             if (statement.Initializer != null)
@@ -264,7 +263,7 @@ namespace Luxembourg
             return null;
         }
 
-        public object VisitWhileStatement(Statement.While statement)
+        public object VisitWhileStatement(WhileStatement statement)
         {
             Resolve(statement.Condition);
             Resolve(statement.Body);

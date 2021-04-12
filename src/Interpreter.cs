@@ -4,27 +4,19 @@ using System.Reflection.Metadata;
 
 namespace Luxembourg
 {
-    public class Interpreter : Expression.Visitor<object>, Statement.Visitor<object>
+    public class Interpreter : IExpressionVisitor<object>, IStatementVisitor<object>
     {
-        private Environment _environment { get; set; } = Globals;
-        
         private readonly Dictionary<Expression, int> _locals = new();
         
-        public static readonly Environment Globals = new();
-
-        public void Interpret(Expression expression)
+        public Interpreter()
         {
-            try
-            {
-                var value = Evaluate(expression);
-                Console.Out.WriteLine(Stringify(value));
-            }
-            catch (RuntimeError e)
-            {
-                Lux.RuntimeError(e);
-            }
+            Environment = Globals;
         }
         
+        public Environment Environment { get; set; }
+
+        public readonly Environment Globals = new();
+
         public void Interpret(List<Statement> statements)
         {
             try
@@ -66,7 +58,7 @@ namespace Luxembourg
             return obj.ToString();
         }
         
-        public object VisitBinaryExpression(Expression.Binary expression)
+        public object VisitBinaryExpression(BinaryExpression expression)
         {
             var left = Evaluate(expression.Left);
             var operatorType = expression.Operator.Type;
@@ -136,17 +128,17 @@ namespace Luxembourg
             return null;
         }
 
-        public object VisitGroupingExpression(Expression.Grouping expression)
+        public object VisitGroupingExpression(GroupingExpression expression)
         {
             return Evaluate(expression.Expression);
         }
 
-        public object VisitLiteralExpression(Expression.Literal expression)
+        public object VisitLiteralExpression(LiteralExpression expression)
         {
             return expression.Value;
         }
 
-        public object VisitUnaryExpression(Expression.Unary expression)
+        public object VisitUnaryExpression(UnaryExpression expression)
         {
             var right = Evaluate(expression.Right);
 
@@ -163,7 +155,7 @@ namespace Luxembourg
             return null;
         }
 
-        public object VisitCallExpression(Expression.Call expression)
+        public object VisitCallExpression(CallExpression expression)
         {
             var callee = Evaluate(expression.Callee);
             var arguments = new List<object>();
@@ -187,7 +179,7 @@ namespace Luxembourg
             return function.Call(this, arguments);
         }
 
-        public object VisitGetExpression(Expression.Get expression)
+        public object VisitGetExpression(GetExpression expression)
         {
             var obj = Evaluate(expression.Object);
 
@@ -199,7 +191,7 @@ namespace Luxembourg
             throw new RuntimeError(expression.Name, "Only instances have properties.");
         }
 
-        public object VisitLogicalExpression(Expression.Logical expression)
+        public object VisitLogicalExpression(LogicalExpression expression)
         {
             var left = Evaluate(expression.Left);
 
@@ -221,7 +213,7 @@ namespace Luxembourg
             return Evaluate(expression.Right);
         }
 
-        public object VisitSetExpression(Expression.Set expression)
+        public object VisitSetExpression(SetExpression expression)
         {
             var obj = Evaluate(expression.Object);
 
@@ -235,29 +227,29 @@ namespace Luxembourg
             return value;
         }
 
-        public object VisitBaseExpression(Expression.Base expression)
+        public object VisitBaseExpression(BaseExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitThisExpression(Expression.This expression)
+        public object VisitThisExpression(ThisExpression expression)
         {
             return LookupVariable(expression.Keyword, expression);
         }
 
-        public object VisitVariableExpression(Expression.Variable expression)
+        public object VisitVariableExpression(VariableExpression expression)
         {
             return LookupVariable(expression.Name, expression);
         }
 
-        public object VisitAssignExpression(Expression.Assign expression)
+        public object VisitAssignExpression(AssignExpression expression)
         {
             var value = Evaluate(expression.Value);
             var distance = _locals[expression];
             
             if (!distance.Equals(null))
             {
-                _environment.AssignAt(distance, expression.Name, value);
+                Environment.AssignAt(distance, expression.Name, value);
             }
             else
             {
@@ -271,9 +263,9 @@ namespace Luxembourg
         {
             var distance = _locals[expression];
 
-            if (!distance.Equals(null))
+            if (distance != null)
             {
-                return _environment.GetAt(distance, name.Lexeme);
+                return Environment.GetAt(distance, name.Lexeme);
             }
             else
             {
@@ -338,10 +330,10 @@ namespace Luxembourg
 
         public void ExecuteBlock(List<Statement> statements, Environment environment)
         {
-            var previous = _environment;
+            var previous = Environment;
             try
             {
-                _environment = environment;
+                Environment = environment;
 
                 foreach (var statement in statements)
                 {
@@ -350,46 +342,46 @@ namespace Luxembourg
             }
             finally
             {
-                _environment = previous;
+                Environment = previous;
             }
         }
         
-        public object VisitBlockStatement(Statement.Block statement)
+        public object VisitBlockStatement(BlockStatement statement)
         {
-            ExecuteBlock(statement.Statements, new(_environment));
+            ExecuteBlock(statement.Statements, new(Environment));
             return null;
         }
 
-        public object VisitClassStatement(Statement.Class statement)
+        public object VisitClassStatement(ClassStatement statement)
         {
-            _environment.Define(statement.Name.Lexeme, null);
+            Environment.Define(statement.Name.Lexeme, null);
 
             var methods = new Dictionary<string, LuxFunction>();
             foreach (var method in statement.Methods)
             {
-                var function = new LuxFunction(method, _environment, method.Name.Lexeme.Equals("init"));
+                var function = new LuxFunction(method, Environment, method.Name.Lexeme.Equals("init"));
                 methods.Put(method.Name.Lexeme, function);
             }
             
             var @class = new LuxClass(statement.Name.Lexeme, methods);
-            _environment.Assign(statement.Name, @class);
+            Environment.Assign(statement.Name, @class);
             return null;
         }
 
-        public object VisitExpressionStatement(Statement.Expression statement)
+        public object VisitExpressionStatement(ExpressionStatement statement)
         {
-            Evaluate(statement.ExpressionSt);
+            Evaluate(statement.Expression);
             return null;
         }
 
-        public object VisitFunctionStatement(Statement.Function statement)
+        public object VisitFunctionStatement(FunctionStatement statement)
         {
-            var function = new LuxFunction(statement, _environment, false);
-            _environment.Define(statement.Name.Lexeme, function);
+            var function = new LuxFunction(statement, Environment, false);
+            Environment.Define(statement.Name.Lexeme, function);
             return null;
         }
 
-        public object VisitIfStatement(Statement.If statement)
+        public object VisitIfStatement(IfStatement statement)
         {
             if (IsTruthy(Evaluate(statement.Condition)))
             {
@@ -403,7 +395,7 @@ namespace Luxembourg
             return null;
         }
 
-        public object VisitReturnStatement(Statement.Return statement)
+        public object VisitReturnStatement(ReturnStatement statement)
         {
             object value = null;
             if (statement.Value != null)
@@ -414,14 +406,14 @@ namespace Luxembourg
             throw new Return(value);
         }
 
-        public object VisitPrintStatement(Statement.Print statement)
+        public object VisitPrintStatement(PrintStatement statement)
         {
             var value = Evaluate(statement.Expression);
             Console.Out.WriteLine(Stringify(value));
             return null;
         }
 
-        public object VisitVarStatement(Statement.Var statement)
+        public object VisitVarStatement(VarStatement statement)
         {
             object value = null;
 
@@ -430,11 +422,11 @@ namespace Luxembourg
                 value = Evaluate(statement.Initializer);
             }
             
-            _environment.Define(statement.Name.Lexeme, value);
+            Environment.Define(statement.Name.Lexeme, value);
             return null;
         }
 
-        public object VisitWhileStatement(Statement.While statement)
+        public object VisitWhileStatement(WhileStatement statement)
         {
             while (IsTruthy(Evaluate(statement.Condition)))
             {

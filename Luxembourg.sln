@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luxembourg", "Luxembourg\Luxembourg.csproj", "{7C9AB35A-E9DA-4A9A-8439-42507D35005F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luxembourg", "src\Luxembourg.csproj", "{7C9AB35A-E9DA-4A9A-8439-42507D35005F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
