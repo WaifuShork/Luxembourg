@@ -105,7 +105,22 @@ namespace Luxembourg
             ResolveLocal(expression, expression.Name);
             return null;
         }
-        
+
+        public object VisitBaseExpression(BaseExpression expression)
+        {
+            if (_currentClass == ClassType.None)
+            {
+                Lux.Error(expression.Keyword, "Can't use 'base' outside of a class.");
+            }
+            else if (_currentClass != ClassType.Subclass)
+            {
+                Lux.Error(expression.Keyword, "Can't use 'base' in a class with no base class");
+            }
+            
+            ResolveLocal(expression, expression.Keyword);
+            return null;
+        }
+
           // ============================ \\
          //           Statements           \\
         // ================================ \\
@@ -126,6 +141,23 @@ namespace Luxembourg
             Declare(statement.Name);
             Define(statement.Name);
 
+            if (statement.BaseClass != null && statement.BaseClass.Name.Lexeme.Equals(statement.BaseClass.Name.Lexeme))
+            {
+                Lux.Error(statement.BaseClass.Name, "A class cannot inherit from itself.");
+            }
+                
+            if (statement.BaseClass != null)
+            {
+                _currentClass = ClassType.Subclass;
+                Resolve(statement.BaseClass);
+            }
+
+            if (statement.BaseClass != null)
+            {
+                BeginScope();
+                _scopes.Peek().Put("base", true);
+            }
+
             BeginScope();
             _scopes.Peek().Put("this", true);
             
@@ -140,6 +172,12 @@ namespace Luxembourg
                 ResolveFunction(method, declaration);
             }
             EndScope();
+
+            if (statement.BaseClass != null)
+            {
+                EndScope();
+            }
+            
             _currentClass = enclosingClass;
             return null;
         }

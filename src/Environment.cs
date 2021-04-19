@@ -20,7 +20,7 @@ namespace Luxembourg
 
         public void Define(string name, object value)
         {
-            _values.Add(name, value);
+            _values.Put(name, value);
         }
 
         public object Get(Token name)
@@ -44,7 +44,7 @@ namespace Luxembourg
             if (_values.ContainsKey(name.Lexeme))
             {
                 // Modify the value on the spot instead of adding a new key
-                _values.Put(name.Lexeme, value); //[name.Lexeme] = value;
+                _values.Put(name.Lexeme, value); 
                 return;
             }
 
@@ -59,7 +59,7 @@ namespace Luxembourg
 
         public object GetAt(int distance, string name)
         {
-            return Ancestor(distance)._values.Get(name); // [name];
+            return Ancestor(distance)._values.Get(name); 
         }
 
         public Environment Ancestor(int distance)
@@ -75,7 +75,7 @@ namespace Luxembourg
 
         public void AssignAt(int distance, Token name, object value)
         {
-            Ancestor(distance)._values[name.Lexeme] = value;
+            Ancestor(distance)._values.Put(name.Lexeme, value);
         }
 
         public override string ToString()

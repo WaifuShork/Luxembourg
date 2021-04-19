@@ -5,10 +5,12 @@ namespace Luxembourg
     public class LuxClass : ILuxCallable
     {
         private readonly Dictionary<string, LuxFunction> _methods;
+        public readonly LuxClass baseClass;
         
-        public LuxClass(string name, Dictionary<string, LuxFunction> methods)
+        public LuxClass(string name, Dictionary<string, LuxFunction> methods, LuxClass baseClass)
         {
             Name = name;
+            this.baseClass = baseClass;
             _methods = methods;
         }
 
@@ -19,6 +21,11 @@ namespace Luxembourg
             if (_methods.ContainsKey(name))
             {
                 return _methods.Get(name); //[name];
+            }
+
+            if (baseClass != null)
+            {
+                return baseClass.FindMethod(name);
             }
 
             return null;

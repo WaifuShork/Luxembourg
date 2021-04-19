@@ -58,6 +58,15 @@ namespace Luxembourg
         private Statement ClassDeclaration()
         {
             var name = Consume(TokenType.Identifier, "Expect class name.");
+
+            VariableExpression superclass = null;
+
+            if (Match(TokenType.Less))
+            {
+                Consume(TokenType.Identifier, "Expect superclass name.");
+                superclass = new(Previous());
+            }
+            
             Consume(TokenType.OpenBrace, "Expect '{' before class body");
 
             var methods = new List<FunctionStatement>();
@@ -68,7 +77,7 @@ namespace Luxembourg
             }
 
             Consume(TokenType.CloseBrace, "Expect '}' after class body.");
-            return new ClassStatement(name, methods);
+            return new ClassStatement(name, superclass, methods);
         }
         
         private FunctionStatement Procedure(string kind)
@@ -302,6 +311,15 @@ namespace Luxembourg
             if (Match(TokenType.Number, TokenType.String))
             {
                 return new LiteralExpression(Previous().Literal);
+            }
+
+            if (Match(TokenType.Base))
+            {
+                var keyword = Previous();
+                Consume(TokenType.Dot, "Expect '.' after 'base'.");
+
+                var method = Consume(TokenType.Identifier, "Expect base class method name.");
+                return new BaseExpression(keyword, method);
             }
 
             if (Match(TokenType.This))

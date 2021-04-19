@@ -258,10 +258,27 @@ namespace Luxembourg
             return value;
         }
 
+        public object VisitBaseExpression(BaseExpression expression)
+        {
+            var distance = _locals.Get(expression);
+            var baseClass = (LuxClass) Environment.GetAt(distance, "base");
+
+            var obj = (LuxInstance) Environment.GetAt(distance - 1, "this");
+
+            var method = baseClass.FindMethod(expression.Method.Lexeme);
+
+            if (method == null)
+            {
+                throw new RuntimeError(expression.Method, $"Undefined property '{expression.Method.Lexeme}'.");
+            }
+            
+            return method.Bind(obj);
+        }
+
         private object LookupVariable(Token name, Expression expression)
         {
-            var distance = _locals.Get(expression); // [expression];
-
+            var distance = _locals.Get(expression); 
+            
             if (distance.Equals(null) == false)
             {
                 return Environment.GetAt(distance, name.Lexeme);
@@ -352,8 +369,24 @@ namespace Luxembourg
 
         public object VisitClassStatement(ClassStatement statement)
         {
+            object baseClass = null;
+            if (statement.BaseClass != null)
+            {
+                baseClass = Evaluate(statement.BaseClass);
+                if (baseClass is not LuxClass)
+                {
+                    throw new RuntimeError(statement.BaseClass.Name, "Superclass must be a class.");
+                }
+            }
+            
             Environment.Define(statement.Name.Lexeme, null);
 
+            if (statement.BaseClass != null)
+            {
+                Environment = new(Environment);
+                Environment.Define("base", baseClass);
+            }
+            
             var methods = new Dictionary<string, LuxFunction>();
             foreach (var method in statement.Methods)
             {
@@ -361,7 +394,13 @@ namespace Luxembourg
                 methods.Put(method.Name.Lexeme, function);
             }
             
-            var @class = new LuxClass(statement.Name.Lexeme, methods);
+            var @class = new LuxClass(statement.Name.Lexeme, methods, (LuxClass) baseClass);
+
+            if (baseClass != null)
+            {
+                Environment = Environment.Enclosing;
+            }
+            
             Environment.Assign(statement.Name, @class);
             return null;
         }

@@ -134,6 +134,11 @@ namespace Luxembourg
             return Parenthesize2("=", expression.Name.Lexeme, expression.Value);
         }
 
+        public string VisitBaseExpression(BaseExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
         // Statements \\
         public string VisitBlockStatement(BlockStatement statement)
         {

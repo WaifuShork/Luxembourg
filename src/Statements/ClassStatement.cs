@@ -5,9 +5,10 @@ namespace Luxembourg.Statements
 {
     public class ClassStatement : Statement
     {
-        public ClassStatement(Token name, List<FunctionStatement> methods)
+        public ClassStatement(Token name, VariableExpression baseClass, List<FunctionStatement> methods)
         {
             Name = name;
+            BaseClass = baseClass;
             Methods = methods;
         }
 

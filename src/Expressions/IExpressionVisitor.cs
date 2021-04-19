@@ -13,5 +13,6 @@
         T VisitThisExpression(ThisExpression expression);
         T VisitVariableExpression(VariableExpression expression);
         T VisitAssignExpression(AssignExpression expression);
+        T VisitBaseExpression(BaseExpression expression);
     }
 }
