@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Luxembourg.Enums;
 
 namespace Luxembourg
 {
     public class Lux
     {
-        private static bool _hadError = false;
-        private static bool _hadRuntimeError = false;
+        private static bool _hadError;
+        private static bool _hadRuntimeError;
         private static readonly Interpreter _interpreter = new();
 
         public static void RunFile(string path)

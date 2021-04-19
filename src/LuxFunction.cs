@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Luxembourg.Statements;
 
 namespace Luxembourg
 {
@@ -33,7 +34,7 @@ namespace Luxembourg
             {
                 interpreter.ExecuteBlock(_declaration.Body, environment);
             }
-            catch (Return r)
+            catch (ReturnError r)
             {
                 if (_isInitializer)
                 {

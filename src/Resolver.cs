@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Luxembourg.Enums;
+using Luxembourg.Expressions;
+using Luxembourg.Statements;
 
 namespace Luxembourg
 {
@@ -15,6 +18,9 @@ namespace Luxembourg
             _interpreter = interpreter;
         }
         
+          // ============================ \\
+         //          Expressions           \\
+        // ================================ \\
         public object VisitBinaryExpression(BinaryExpression expression)
         {
             Resolve(expression.Left);
@@ -70,11 +76,6 @@ namespace Luxembourg
             return null;
         }
 
-        public object VisitBaseExpression(BaseExpression expression)
-        {
-            throw new System.NotImplementedException();
-        }
-
         public object VisitThisExpression(ThisExpression expression)
         {
             if (_currentClass == ClassType.None)
@@ -104,66 +105,11 @@ namespace Luxembourg
             ResolveLocal(expression, expression.Name);
             return null;
         }
-
-
-
-
-        private void ResolveLocal(Expression expression, Token name)
-        {
-            for (var i = _scopes.Count - 1; i >= 0; i++)
-            {
-                if (_scopes.ElementAt(i).ContainsKey(name.Lexeme))
-                {
-                    _interpreter.Resolve(expression, _scopes.Count - 1 - i);
-                    return;
-                }
-            }
-        }
-
-        public void Resolve(List<Statement> statements)
-        {
-            foreach (var statement in statements)
-            {
-                Resolve(statement);
-            }
-        }
-
-        public void Resolve(Statement statement)
-        {
-            statement.Accept(this);
-        }
-
-        private void Resolve(Expression expression)
-        {
-            expression.Accept(this);
-        }
-
-        private void BeginScope()
-        {
-            _scopes.Push(new());
-        }
-
-        private void EndScope()
-        {
-            _scopes.Pop();
-        }
-
-        private void ResolveFunction(FunctionStatement function, FunctionType type)
-        {
-            var enclosingType = _currentFunction;
-            _currentFunction = type;
-            BeginScope();
-
-            foreach (var param in function.Parameters)
-            {
-                Declare(param);
-                Define(param);
-            }
-            Resolve(function.Body);
-            EndScope();
-            _currentFunction = enclosingType;
-        }
         
+          // ============================ \\
+         //           Statements           \\
+        // ================================ \\
+
         public object VisitBlockStatement(BlockStatement statement)
         {
             BeginScope();
@@ -269,6 +215,27 @@ namespace Luxembourg
             Resolve(statement.Body);
             return null;
         }
+        
+        
+          // ============================ \\
+         //            Helpers             \\
+        // ================================ \\
+        
+        private void ResolveFunction(FunctionStatement function, FunctionType type)
+        {
+            var enclosingType = _currentFunction;
+            _currentFunction = type;
+            BeginScope();
+
+            foreach (var param in function.Parameters)
+            {
+                Declare(param);
+                Define(param);
+            }
+            Resolve(function.Body);
+            EndScope();
+            _currentFunction = enclosingType;
+        }
 
         private void Declare(Token name)
         {
@@ -284,7 +251,8 @@ namespace Luxembourg
                 Lux.Error(name, "Already variable declared with this name in this scope.");
             }
             
-            scope[name.Lexeme] = false;
+            scope.Put(name.Lexeme, false);
+            //scope[name.Lexeme] = false;
         }
 
         private void Define(Token name)
@@ -295,6 +263,46 @@ namespace Luxembourg
             }
 
             _scopes.Peek()[name.Lexeme] = true;
+        }
+        
+        private void ResolveLocal(Expression expression, Token name)
+        {
+            for (var i = _scopes.Count - 1; i >= 0; i++)
+            {
+                if (_scopes.ElementAt(i).ContainsKey(name.Lexeme))
+                {
+                    _interpreter.Resolve(expression, _scopes.Count - 1 - i);
+                    return;
+                }
+            }
+        }
+
+        public void Resolve(List<Statement> statements)
+        {
+            foreach (var statement in statements)
+            {
+                Resolve(statement);
+            }
+        }
+
+        public void Resolve(Statement statement)
+        {
+            statement.Accept(this);
+        }
+
+        private void Resolve(Expression expression)
+        {
+            expression.Accept(this);
+        }
+
+        private void BeginScope()
+        {
+            _scopes.Push(new());
+        }
+
+        private void EndScope()
+        {
+            _scopes.Pop();
         }
     }
 }

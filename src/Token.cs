@@ -1,4 +1,6 @@
-﻿namespace Luxembourg
+﻿using Luxembourg.Enums;
+
+namespace Luxembourg
 {
     public class Token
     {

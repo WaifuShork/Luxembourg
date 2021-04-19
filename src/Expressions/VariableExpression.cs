@@ -1,18 +1,17 @@
-﻿namespace Luxembourg
+﻿namespace Luxembourg.Expressions
 {
-   
-        public class VariableExpression : Expression
+    public class VariableExpression : Expression
+    {
+        public VariableExpression(Token name)
         {
-            public VariableExpression(Token name)
-            {
-                Name = name;
-            }
-
-            public Token Name { get; }
-
-            public override T Accept<T>(IExpressionVisitor<T> visitor)
-            {
-                return visitor.VisitVariableExpression(this);
-            }
+            Name = name;
         }
+
+        public Token Name { get; }
+
+        public override T Accept<T>(IExpressionVisitor<T> visitor)
+        {
+            return visitor.VisitVariableExpression(this);
+        }
+    }
 }

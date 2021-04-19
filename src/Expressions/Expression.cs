@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-
-namespace Luxembourg
+﻿namespace Luxembourg.Expressions
 {
-    public abstract partial class Expression
+    public abstract class Expression
     {
         public abstract T Accept<T>(IExpressionVisitor<T> visitor);
     }

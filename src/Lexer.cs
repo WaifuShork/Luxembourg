@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.Reflection.PortableExecutable;
+﻿using System.Collections.Generic;
+using Luxembourg.Enums;
 
 namespace Luxembourg
 {
@@ -164,7 +161,7 @@ namespace Luxembourg
                 Advance();
             }
 
-            var text = _source.SubstringEx(_start, _current);
+            var text = Extensions.Substring(_source, _start, _current);
             if (!_keywords.TryGetValue(text, out var type))
             {
                 type = TokenType.Identifier;
@@ -206,9 +203,7 @@ namespace Luxembourg
                 }
             }
 
-            // tagged 
-            //AddToken(TokenType.Number, double.Parse(_source.Substring(_start, _current - _start + 1)));
-            AddToken(TokenType.Number, double.Parse(_source.SubstringEx(_start, _current)));
+            AddToken(TokenType.Number, double.Parse(Extensions.Substring(_source, _start, _current)));
         }
 
         private char PeekNext()
@@ -244,7 +239,7 @@ namespace Luxembourg
 
             // checked
             // This gets the value of the string without the "quotations"
-            var value = _source.SubstringEx(_start + 1, _current - 1);
+            var value = Extensions.Substring(_source, _start + 1, _current - 1);
             AddToken(TokenType.String, value);
         }
 
@@ -286,8 +281,7 @@ namespace Luxembourg
 
         private void AddToken(TokenType type, object literal)
         {
-            // checked
-            var text = _source.SubstringEx(_start, _current);
+            var text = Extensions.Substring(_source, _start, _current);
             _tokens.Add(new(type, text, literal, _line));
         }
     }

@@ -28,7 +28,7 @@ namespace Luxembourg
             if (_values.ContainsKey(name.Lexeme))
             {
                 // Modify the value on the spot instead of adding a new key
-                return _values[name.Lexeme];
+                return _values.Get(name.Lexeme);
             }
 
             if (Enclosing != null)
@@ -44,7 +44,7 @@ namespace Luxembourg
             if (_values.ContainsKey(name.Lexeme))
             {
                 // Modify the value on the spot instead of adding a new key
-                _values[name.Lexeme] = value;
+                _values.Put(name.Lexeme, value); //[name.Lexeme] = value;
                 return;
             }
 
@@ -59,7 +59,7 @@ namespace Luxembourg
 
         public object GetAt(int distance, string name)
         {
-            return Ancestor(distance)._values[name];
+            return Ancestor(distance)._values.Get(name); // [name];
         }
 
         public Environment Ancestor(int distance)

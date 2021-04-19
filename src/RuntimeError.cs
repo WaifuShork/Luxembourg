@@ -9,6 +9,6 @@ namespace Luxembourg
             Token = token;
         }
         
-        public Token Token { get; set; }
+        public Token Token { get; }
     }
 }

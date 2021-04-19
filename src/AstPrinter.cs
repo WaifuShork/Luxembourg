@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
+using Luxembourg.Expressions;
+using Luxembourg.Statements;
 
 namespace Luxembourg
 {
@@ -118,11 +119,6 @@ namespace Luxembourg
             return Parenthesize2("=", expression.Object, expression.Name.Lexeme, expression.Value);
         }
 
-        public string VisitBaseExpression(BaseExpression expression)
-        {
-            throw new NotImplementedException();
-        }
-
         public string VisitThisExpression(ThisExpression expression)
         {
             return "this";
@@ -138,7 +134,6 @@ namespace Luxembourg
             return Parenthesize2("=", expression.Name.Lexeme, expression.Value);
         }
 
-        
         // Statements \\
         public string VisitBlockStatement(BlockStatement statement)
         {

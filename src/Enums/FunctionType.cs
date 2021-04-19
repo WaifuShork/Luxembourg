@@ -1,4 +1,4 @@
-﻿namespace Luxembourg
+﻿namespace Luxembourg.Enums
 {
     public enum FunctionType
     {

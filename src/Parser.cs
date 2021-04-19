@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Luxembourg.Enums;
+using Luxembourg.Errors;
+using Luxembourg.Expressions;
+using Luxembourg.Statements;
 
 namespace Luxembourg
 {
     public class Parser
     {
-        private class ParseError : Exception { }
-        
         private readonly List<Token> _tokens;
         private int _current = 0;
 
@@ -182,9 +183,7 @@ namespace Luxembourg
 
             return expression;
         }
-
         
-
         private Expression Comparison()
         {
             var expression = Term();
@@ -486,8 +485,9 @@ namespace Luxembourg
         }
         
         
-        
-        // Helpers \\ 
+          // ============================ \\
+         //            Helpers             \\
+        // ================================ \\ 
         private bool Match(params TokenType[] types)
         {
             foreach (var type in types)
@@ -548,7 +548,6 @@ namespace Luxembourg
             throw Error(Peek(), message);
         }
         
-        // Panic Mode \\
         private ParseError Error(Token token, string message)
         {
             Lux.Error(token, message);

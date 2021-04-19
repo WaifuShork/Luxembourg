@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Luxembourg
+namespace Luxembourg.Statements
 {
     public abstract partial class Statement
     {

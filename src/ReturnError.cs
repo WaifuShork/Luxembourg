@@ -2,9 +2,9 @@
 
 namespace Luxembourg
 {
-    public class Return : Exception
+    public class ReturnError : Exception
     {
-        public Return(object value)
+        public ReturnError(object value)
         {
             Value = value;
         }

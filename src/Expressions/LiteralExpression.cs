@@ -1,19 +1,17 @@
-﻿namespace Luxembourg
+﻿namespace Luxembourg.Expressions
 {
-    
-        public class LiteralExpression : Expression
+    public class LiteralExpression : Expression
+    {
+        public LiteralExpression(object value)
         {
-            public LiteralExpression(object value)
-            {
-                Value = value;
-            }
-
-            public object Value { get; }
-
-            public override T Accept<T>(IExpressionVisitor<T> visitor)
-            {
-                return visitor.VisitLiteralExpression(this);
-            }
+            Value = value;
         }
-    
+
+        public object Value { get; }
+
+        public override T Accept<T>(IExpressionVisitor<T> visitor)
+        {
+            return visitor.VisitLiteralExpression(this);
+        }
+    }
 }

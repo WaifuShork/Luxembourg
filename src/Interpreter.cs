@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection.Metadata;
+using Luxembourg.Enums;
+using Luxembourg.Expressions;
+using Luxembourg.Statements;
 
 namespace Luxembourg
 {
@@ -49,7 +51,7 @@ namespace Luxembourg
                 var text = obj.ToString();
                 if (text.EndsWith(".0"))
                 {
-                    text = text.SubstringEx(0, text.Length - 2);
+                    text = Extensions.Substring(text, 0, text.Length - 2);
                 }
 
                 return text;
@@ -82,6 +84,7 @@ namespace Luxembourg
                     CheckNumberOperands(expression.Operator, left, right);
                     return (double) left * (double) right;
 
+                // string and number arithmetic
                 case TokenType.Plus:
                     if (left is double && right is double)
                     {
@@ -165,12 +168,12 @@ namespace Luxembourg
                 arguments.Add(Evaluate(argument));
             }
 
-            if (callee is not LuxFunction)
+            if (callee is not ILuxCallable)
             {
                 throw new RuntimeError(expression.Paren, "Can only call functions and classes.");
             }
             
-            var function = (LuxFunction) callee;
+            var function = (ILuxCallable) callee;
             if (arguments.Count != function.Arity())
             {
                 throw new RuntimeError(expression.Paren, $"Expected {function.Arity()} arguments but got {arguments.Count}.");
@@ -226,11 +229,7 @@ namespace Luxembourg
             instance.Set(expression.Name, value);
             return value;
         }
-
-        public object VisitBaseExpression(BaseExpression expression)
-        {
-            throw new NotImplementedException();
-        }
+        
 
         public object VisitThisExpression(ThisExpression expression)
         {
@@ -245,9 +244,9 @@ namespace Luxembourg
         public object VisitAssignExpression(AssignExpression expression)
         {
             var value = Evaluate(expression.Value);
-            var distance = _locals[expression];
+            var distance = _locals.Get(expression); // [expression];
             
-            if (!distance.Equals(null))
+            if (distance.Equals(null) == false)
             {
                 Environment.AssignAt(distance, expression.Name, value);
             }
@@ -261,16 +260,15 @@ namespace Luxembourg
 
         private object LookupVariable(Token name, Expression expression)
         {
-            var distance = _locals[expression];
+            var distance = _locals.Get(expression); // [expression];
 
-            if (distance != null)
+            if (distance.Equals(null) == false)
             {
                 return Environment.GetAt(distance, name.Lexeme);
             }
-            else
-            {
-                return Globals.Get(name);
-            }
+            
+            Console.WriteLine("Shit happened here");
+            return Globals.Get(name);
         }
 
         private bool IsTruthy(object obj)
@@ -403,7 +401,7 @@ namespace Luxembourg
                 value = Evaluate(statement.Value);
             }
 
-            throw new Return(value);
+            throw new ReturnError(value);
         }
 
         public object VisitPrintStatement(PrintStatement statement)
