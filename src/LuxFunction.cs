@@ -58,5 +58,7 @@ namespace Luxembourg
             environment.Define("this", instance);
             return new(_declaration, environment, _isInitializer);
         }
+
+        public override string ToString() => $"<fn {_declaration.Name.Lexeme}>";
     }
 }

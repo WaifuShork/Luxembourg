@@ -1,0 +1,17 @@
+class Foo
+{
+	prt() 
+	{
+		print "hello world";
+	}
+}
+
+class Bar < Foo
+{
+	printer()
+	{
+		base.prt();
+	}
+}
+
+Bar().printer();

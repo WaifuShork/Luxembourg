@@ -31,19 +31,19 @@ namespace Luxembourg
         {
             try
             {
-                if (Match(TokenType.Var))
+                if (Match(TokenType.Class))
                 {
-                    return VarDeclaration();
+                    return ClassDeclaration();
                 }
-
+                
                 if (Match(TokenType.Procedure))
                 {
                     return Procedure("procedure");
                 }
 
-                if (Match(TokenType.Class))
+                if (Match(TokenType.Var))
                 {
-                    return ClassDeclaration();
+                    return VarDeclaration();
                 }
 
                 return Statement();
@@ -63,7 +63,7 @@ namespace Luxembourg
 
             if (Match(TokenType.Less))
             {
-                Consume(TokenType.Identifier, "Expect superclass name.");
+                Consume(TokenType.Identifier, "Expect base class name.");
                 superclass = new(Previous());
             }
             
@@ -73,7 +73,7 @@ namespace Luxembourg
 
             while (!Check(TokenType.CloseBrace) && !IsAtEnd())
             {
-                methods.Add(Procedure("procedure"));
+                methods.Add(Procedure("method"));
             }
 
             Consume(TokenType.CloseBrace, "Expect '}' after class body.");
@@ -467,6 +467,7 @@ namespace Luxembourg
 
             var thenBranch = Statement();
             Statement elseBranch = null;
+            
             if (Match(TokenType.Else))
             {
                 elseBranch = Statement();

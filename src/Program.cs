@@ -9,22 +9,6 @@ namespace Luxembourg
 {
     internal class Program
     {
-        private static void Main(string[] args)
-        {
-            Lux.RunPrompt();
-            /*if (args.Length > 1)
-            {
-                Console.WriteLine("Usage: lux [script]");
-                Environment.Exit(1);
-            }
-            else if (args.Length == 1)
-            {
-                RunFile(args[0]);
-            }
-            else
-            {
-                RunPrompt();
-            }*/
-        }
+        
     }
 }

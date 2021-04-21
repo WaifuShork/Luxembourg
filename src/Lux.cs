@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using Luxembourg.Enums;
 
 namespace Luxembourg
@@ -11,6 +12,23 @@ namespace Luxembourg
         private static bool _hadRuntimeError;
         private static readonly Interpreter _interpreter = new();
 
+        private static void Main(string[] args)
+        {
+            if (args.Length > 1)
+            {
+                Console.Out.WriteLine("Usage: lux [script]");
+                System.Environment.Exit(1);
+            }
+            else if (args.Length == 1)
+            {
+                RunFile(args[0]);
+            }
+            else
+            {
+                RunPrompt();
+            }
+        }
+        
         public static void RunFile(string path)
         {
             var file = File.ReadAllText(path);

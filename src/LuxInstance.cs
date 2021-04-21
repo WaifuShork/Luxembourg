@@ -16,7 +16,7 @@ namespace Luxembourg
         {
             if (_fields.ContainsKey(name.Lexeme))
             {
-                return _fields[name.Lexeme];
+                return _fields.Get(name.Lexeme);
             }
 
             var method = _class.FindMethod(name.Lexeme);
